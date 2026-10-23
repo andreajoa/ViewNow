@@ -1,5 +1,6 @@
 -- Run once in Supabase SQL Editor. Safe multi-tenant RLS, no client-editable billing roles.
 create extension if not exists pgcrypto;
+create schema if not exists viewnow_private;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -8,7 +9,7 @@ create table if not exists public.profiles (
   stripe_customer_id text unique,
   created_at timestamptz not null default now()
 );
-create or replace function public.handle_new_user()
+create or replace function viewnow_private.handle_new_user()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
   insert into public.profiles(id) values (new.id) on conflict(id) do nothing;
@@ -16,7 +17,7 @@ begin
 end $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
-for each row execute procedure public.handle_new_user();
+for each row execute procedure viewnow_private.handle_new_user();
 
 -- Backfill profiles when schema is installed after existing users are registered.
 insert into public.profiles(id) select id from auth.users on conflict do nothing;
@@ -43,7 +44,7 @@ create table if not exists public.video_clicks (
 );
 create index if not exists clicks_video_idx on public.video_clicks(video_id);
 
-create or replace function public.enforce_video_plan() returns trigger
+create or replace function viewnow_private.enforce_video_plan() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare
   p record;
@@ -62,7 +63,7 @@ begin
 end $$;
 drop trigger if exists limit_video_creation on public.videos;
 create trigger limit_video_creation before insert on public.videos
-for each row execute procedure public.enforce_video_plan();
+for each row execute procedure viewnow_private.enforce_video_plan();
 
 alter table public.profiles enable row level security;
 alter table public.videos enable row level security;
@@ -99,3 +100,8 @@ grant select, insert, update, delete on public.videos to authenticated;
 grant select on public.videos to anon;
 grant insert on public.video_clicks to anon, authenticated;
 grant select on public.video_clicks to authenticated;
+
+-- Prevent direct invocation of privileged trigger functions by API roles.
+revoke all on schema viewnow_private from public, anon, authenticated;
+revoke all on function viewnow_private.handle_new_user() from public, anon, authenticated;
+revoke all on function viewnow_private.enforce_video_plan() from public, anon, authenticated;
