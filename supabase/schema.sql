@@ -105,3 +105,19 @@ grant select on public.video_clicks to authenticated;
 revoke all on schema viewnow_private from public, anon, authenticated;
 revoke all on function viewnow_private.handle_new_user() from public, anon, authenticated;
 revoke all on function viewnow_private.enforce_video_plan() from public, anon, authenticated;
+
+-- Admins always remain on the free plan while retaining unlimited video capacity.
+create or replace function viewnow_private.ensure_admin_free_plan()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if new.is_admin is true then
+    new.plan := 'free';
+  end if;
+  return new;
+end $$;
+drop trigger if exists ensure_admin_free_plan on public.profiles;
+create trigger ensure_admin_free_plan
+before insert or update of plan, is_admin on public.profiles
+for each row execute function viewnow_private.ensure_admin_free_plan();
+update public.profiles set plan = 'free' where is_admin = true and plan <> 'free';
+revoke all on function viewnow_private.ensure_admin_free_plan() from public, anon, authenticated;
