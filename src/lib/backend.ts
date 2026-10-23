@@ -5,9 +5,13 @@ export type Video = {
   current_views:number; target_views:number; updated_at?:string; created_at:string;
 };
 export type Profile = { id:string; plan:string; is_admin:boolean; stripe_customer_id:string|null };
-export const configured = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+// The fallback uses ONLY Supabase's browser-safe publishable key, never a secret/service key.
+// Production deployments may override both values in Vercel environment settings.
+const publicUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ctzjczesrsxwbiemnquf.supabase.co';
+const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_B1bDlSa49bvOGKsPB4Jfug_p-cKn_tb';
+export const configured = Boolean(publicUrl && publicKey);
 export const supabase: SupabaseClient | null = configured
-  ? createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)
+  ? createClient(publicUrl, publicKey)
   : null;
 const KEY = 'viewnow-demo-videos';
 export function demoVideos(): Video[] {
