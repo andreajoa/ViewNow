@@ -72,3 +72,15 @@ curl -X POST https://SEU-DOMINIO/api/videos \\
 - \`api/\`: API própria serverless da Vercel.
 - \`supabase/schema.sql\`: base de dados e políticas.
 - \`tests/\`: testes locais.
+
+## Painel de solicitação estilo SMM
+
+O painel **Nova solicitação** segue a experiência de um catálogo de marketing digital: rede social, categoria, serviço, link do vídeo, meta de audiência, orçamento e envio.
+
+- **Meus pedidos** lista solicitações gravadas no Supabase, com controle de acesso por usuário e visão administrativa.
+- **Serviços** mostra opções para campanhas autorizadas em Meta Ads, Google Ads, TikTok Ads, estratégias orgânicas e revisão criativa.
+- O administrador mantém a conta grátis com limite ilimitado de vídeos.
+- O sistema não cobra automaticamente nem executa campanhas; as solicitações têm status inicial **Recebido** e dependem de um fluxo de operação de publicidade real a ser integrado.
+- Não há venda nem geração de visualizações artificiais. As metas são objetivos, não entregas garantidas.
+
+O banco do projeto já recebeu a migração de solicitações. Para replicar a estrutura em outro Supabase, execute \`supabase/schema.sql\` e depois \`supabase/campaign_requests.sql\`.
