@@ -18,7 +18,7 @@ export function parseVideoUrl(input: string): VideoInfo | null {
     if (host === 'tiktok.com' || host === 'vm.tiktok.com' || host === 'vt.tiktok.com') {
       const id = parts.includes('video') ? parts[parts.indexOf('video') + 1] : null;
       if (!id || !/^\d{10,24}$/.test(id)) return null;
-      return { platform: 'tiktok', url: 'https://www.tiktok.com/@' + (parts[0] || '').replace(/^@/, '@') + '/video/' + id, embedUrl: 'https://www.tiktok.com/embed/v2/' + id, id };
+      return { platform: 'tiktok', url: 'https://www.tiktok.com/@' + (parts[0] || '').replace(/^@/, '') + '/video/' + id, embedUrl: 'https://www.tiktok.com/embed/v2/' + id, id };
     }
     if (['facebook.com', 'fb.watch', 'fb.com'].includes(host)) {
       if (host === 'fb.watch' && !parts[0]) return null;
