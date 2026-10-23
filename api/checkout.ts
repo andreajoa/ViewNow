@@ -15,8 +15,10 @@ export async function POST(request: Request) {
     const base = process.env.APP_URL?.replace(/\/+$/, '');
     if (!base || !base.startsWith('https://')) throw new Error('APP_URL HTTPS precisa ser configurada.');
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const { data: profile, error } = await adminClient.from('profiles').select('stripe_customer_id').eq('id', user.id).single();
+    const { data: profile, error } = await adminClient.from('profiles').select('stripe_customer_id,is_admin').eq('id', user.id).single();
     if (error) throw error;
+    // Administrators never enter paid checkout, even if called directly via the API.
+    if (profile.is_admin) return Response.json({error:'Administradores usam a ViewNow gratuitamente e não precisam contratar um plano.'}, {status:403});
     let customerId = profile.stripe_customer_id;
     if (!customerId) {
       const customer = await stripe.customers.create({ email:user.email, metadata:{ user_id:user.id } });
