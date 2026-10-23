@@ -19,6 +19,10 @@ export async function POST(request: Request) {
         id = data?.id;
       }
       if (!id) return;
+      // Billing events must not assign a paid plan to an administrator.
+      const {data:existing,error:profileError} = await adminClient.from('profiles').select('is_admin').eq('id',id).single();
+      if (profileError) throw profileError;
+      if (existing.is_admin) return;
       const active = ['active','trialing'].includes(sub.status);
       const plan = active && ['starter','growth','scale'].includes(sub.metadata.plan) ? sub.metadata.plan : 'free';
       const {error} = await adminClient.from('profiles').update({plan, stripe_customer_id:String(sub.customer)}).eq('id',id);
